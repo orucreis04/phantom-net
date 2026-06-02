@@ -1,0 +1,53 @@
+profile: production
+
+server:
+  host: 0.0.0.0
+  dashboard_port: 8080
+  gateway_port: 8082
+  honeypot_port: 8081
+  no_gateway: false
+  no_tcp_decoys: true
+
+auth:
+  username: admin
+  password: ""
+  password_hash: "pbkdf2_sha256$..."
+  secret: "change-this-long-random-secret"
+  session_max_age_seconds: 28800
+  login_window_seconds: 300
+  max_login_attempts: 5
+
+detector:
+  window_seconds: 90
+  burst_window_seconds: 10
+  rate_limit_hits: 6
+  path_sweep_threshold: 5
+  service_sweep_threshold: 3
+  session_lock_threshold: 85
+  session_memory_threshold: 55
+  redirect_threshold: 35
+  high_risk_threshold: 70
+
+gateway:
+  backend_url: "http://127.0.0.1:9000"
+
+honeypot:
+  response_delay_seconds: 0.35
+
+alerts:
+  threshold: 90
+  cooldown_seconds: 60
+  webhook_url: ""
+
+ai:
+  provider: local
+  model: gpt-5.2
+  api_key: ""
+  timeout_seconds: 20
+
+siem:
+  enabled: true
+  formats: jsonl,cef,syslog
+  jsonl_path: data/siem_events.jsonl
+  cef_path: data/siem_cef.log
+  syslog_path: data/siem_syslog.log

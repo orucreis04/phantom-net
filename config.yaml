@@ -1,0 +1,105 @@
+profile: dev
+
+server:
+  host: 127.0.0.1
+  dashboard_port: 8080
+  gateway_port: 8082
+  honeypot_port: 8081
+  no_gateway: false
+  no_tcp_decoys: true
+
+auth:
+  username: admin
+  password: phantom-admin
+  password_hash: ""
+  secret: phantom-net-local-dev-secret
+  session_max_age_seconds: 28800
+  login_window_seconds: 300
+  max_login_attempts: 5
+
+detector:
+  window_seconds: 90
+  burst_window_seconds: 10
+  rate_limit_hits: 6
+  path_sweep_threshold: 5
+  service_sweep_threshold: 3
+  session_lock_threshold: 85
+  session_memory_threshold: 55
+  redirect_threshold: 35
+  high_risk_threshold: 70
+
+gateway:
+  backend_url: ""
+
+honeypot:
+  response_delay_seconds: 0.35
+
+alerts:
+  threshold: 90
+  cooldown_seconds: 60
+  webhook_url: ""
+
+ai:
+  provider: local
+  model: gpt-5.2
+  api_key: ""
+  timeout_seconds: 20
+
+siem:
+  enabled: true
+  formats: jsonl,cef,syslog
+  jsonl_path: data/siem_events.jsonl
+  cef_path: data/siem_cef.log
+  syslog_path: data/siem_syslog.log
+
+rules:
+  - name: service_probe
+    condition: service_not_trusted
+    tag: service_probe
+    score: 25
+    enabled: true
+  - name: port_scan
+    condition: unique_probe_services_gte:service_sweep_threshold
+    tag: port_scan
+    score: 40
+    enabled: true
+  - name: rate_limit
+    condition: recent_burst_gte:rate_limit_hits
+    tag: rate_limit_exceeded
+    score: 30
+    enabled: true
+  - name: rapid_requests
+    condition: recent_hits_gte:8
+    tag: rapid_requests
+    score: 25
+    enabled: true
+  - name: path_sweep
+    condition: unique_paths_gte:path_sweep_threshold
+    tag: path_sweep
+    score: 30
+    enabled: true
+  - name: sensitive_path
+    condition: haystack_contains:suspicious_path_hints
+    tag: sensitive_path
+    score: 30
+    enabled: true
+  - name: credential_attack
+    condition: event_type_equals:auth_attempt
+    tag: credential_attack
+    score: 30
+    enabled: true
+  - name: brute_force_pattern
+    condition: payload_contains:brute_force_hints
+    tag: brute_force_pattern
+    score: 15
+    enabled: true
+  - name: session_memory
+    condition: session_max_risk_gte:session_memory_threshold
+    tag: session_memory
+    score: 30
+    enabled: true
+  - name: decoy_session
+    condition: decoy_locked
+    tag: decoy_session
+    score: 20
+    enabled: true

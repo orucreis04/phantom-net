@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phantom-Net Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Phantom-Net</h1>
+      <p>Deception defense dashboard</p>
+    </div>
+    <nav class="top-nav" aria-label="Dashboard sections">
+      <a href="#operations">Operations</a>
+      <a href="#intelligence">Intelligence</a>
+      <a href="#investigation">Investigation</a>
+      <a href="#governance">Governance</a>
+    </nav>
+    <div class="top-actions">
+      <span id="last-updated">-</span>
+      <a class="export-button quiet" href="/logout">Logout</a>
+      <button id="refresh" title="Yenile">Refresh</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="control-strip" aria-label="Dashboard controls">
+      <div>
+        <span>Mode</span>
+        <strong id="refresh-mode">Live</strong>
+      </div>
+      <label class="toggle">
+        <input id="auto-refresh" type="checkbox" checked>
+        <span>Auto refresh</span>
+      </label>
+      <button id="clear-filters" class="secondary-button" title="Filtreleri temizle">Clear filters</button>
+      <a class="export-button quiet" href="/api/siem/status" target="_blank" rel="noreferrer">SIEM status</a>
+    </section>
+
+    <div class="section-label" id="operations">
+      <span>Operations Overview</span>
+      <p>Live attack telemetry, routing decisions, and SIEM export health.</p>
+    </div>
+
+    <section class="metrics" aria-label="Metrics">
+      <article>
+        <span>Total Events</span>
+        <strong id="total-events">0</strong>
+      </article>
+      <article>
+        <span>Suspicious IPs</span>
+        <strong id="unique-sources">0</strong>
+      </article>
+      <article>
+        <span>High Risk</span>
+        <strong id="high-risk">0</strong>
+      </article>
+      <article>
+        <span>Redirected</span>
+        <strong id="redirected">0</strong>
+      </article>
+    </section>
+
+    <section class="split summary-grid">
+      <div>
+        <h2>Top Sources</h2>
+        <table>
+          <thead><tr><th>IP</th><th>Events</th><th>Max Risk</th></tr></thead>
+          <tbody id="top-ips"></tbody>
+        </table>
+      </div>
+      <div>
+        <h2>Detection Tags</h2>
+        <table>
+          <thead><tr><th>Tag</th><th>Count</th></tr></thead>
+          <tbody id="top-tags"></tbody>
+        </table>
+      </div>
+      <div class="siem-card">
+        <h2>SIEM Export</h2>
+        <div class="siem-status">
+          <span id="siem-state" class="status-dot">-</span>
+          <strong id="siem-formats">-</strong>
+        </div>
+        <dl id="siem-targets" class="siem-targets"></dl>
+      </div>
+    </section>
+
+    <div class="section-label" id="intelligence">
+      <span>Intelligence & Reporting</span>
+      <p>Daily/weekly summaries, exports, AI analyst output, and generated decoy data.</p>
+    </div>
+
+    <section class="report-panel">
+      <div class="section-head">
+        <h2>Reports</h2>
+        <div class="filters">
+          <select id="report-period" aria-label="Report period">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+          <a class="export-button" id="export-json" href="/api/reports/export?format=json">JSON</a>
+          <a class="export-button" id="export-csv" href="/api/reports/export?format=csv">CSV</a>
+        </div>
+      </div>
+      <div class="report-grid">
+        <div>
+          <h3>Attack Summary</h3>
+          <table>
+            <thead><tr><th>Period</th><th>Events</th><th>IPs</th><th>High Risk</th><th>Redirected</th><th>Max</th></tr></thead>
+            <tbody id="report-buckets"></tbody>
+          </table>
+        </div>
+        <div>
+          <h3>Riskiest IPs</h3>
+          <table>
+            <thead><tr><th>IP</th><th>Events</th><th>High</th><th>Max</th></tr></thead>
+            <tbody id="report-ips"></tbody>
+          </table>
+        </div>
+        <div>
+          <h3>Attack Types</h3>
+          <table>
+            <thead><tr><th>Type</th><th>Count</th></tr></thead>
+            <tbody id="report-types"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="ai-panel">
+      <div class="section-head">
+        <h2>AI Analyst</h2>
+        <div class="filters">
+          <button id="refresh-ai" title="AI analizini yenile">Analyze</button>
+          <button id="save-ai-report" title="AI raporunu kaydet">Save Report</button>
+        </div>
+      </div>
+      <div class="ai-grid">
+        <div>
+          <span class="eyebrow">Severity</span>
+          <strong id="ai-severity">-</strong>
+          <p id="ai-headline">-</p>
+          <p id="ai-summary">-</p>
+        </div>
+        <div>
+          <h3>Key Findings</h3>
+          <ul id="ai-findings" class="plain-list"></ul>
+        </div>
+        <div>
+          <h3>Recommended Actions</h3>
+          <ul id="ai-actions" class="plain-list"></ul>
+        </div>
+        <div>
+          <h3>Generated Decoy Data</h3>
+          <pre id="ai-decoy"></pre>
+        </div>
+        <div>
+          <h3>Saved Reports</h3>
+          <ul id="ai-reports" class="plain-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-label" id="investigation">
+      <span>Investigation Workspace</span>
+      <p>Filter raw activity, inspect IP timelines, and open incidents from the same view.</p>
+    </div>
+
+    <section class="workspace">
+      <div class="activity-panel">
+        <div class="section-head">
+          <h2>Recent Activity</h2>
+          <div class="filters">
+            <input id="source-filter" placeholder="IP filter">
+            <select id="decision-filter" aria-label="Decision filter">
+              <option value="">All decisions</option>
+              <option value="redirect_to_decoy">Redirected</option>
+              <option value="observe">Observed</option>
+            </select>
+            <select id="risk-filter" aria-label="Risk filter">
+              <option value="">All risk</option>
+              <option value="35">Risk 35+</option>
+              <option value="70">Risk 70+</option>
+              <option value="90">Risk 90+</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Source</th>
+                <th>Service</th>
+                <th>Type</th>
+                <th>Path</th>
+                <th>Risk</th>
+                <th>Decision</th>
+                <th>Why</th>
+                <th>MITRE</th>
+              </tr>
+            </thead>
+            <tbody id="events"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <aside class="detail-panel">
+        <div class="detail-empty" id="detail-empty">
+          <h2>IP Detail</h2>
+          <p>Select a source IP to inspect its timeline and decision reasons.</p>
+        </div>
+        <div class="detail-content hidden" id="detail-content">
+          <div class="detail-title">
+            <div>
+              <span>Source IP</span>
+              <strong id="detail-ip">-</strong>
+            </div>
+            <div class="detail-actions">
+              <button id="create-incident" title="Incident oluştur">Incident</button>
+              <button id="clear-detail" title="Kapat">Close</button>
+            </div>
+          </div>
+
+          <div class="detail-stats">
+            <article><span>Events</span><strong id="detail-events">0</strong></article>
+            <article><span>Max Risk</span><strong id="detail-risk">0</strong></article>
+            <article><span>Redirected</span><strong id="detail-redirected">0</strong></article>
+            <article><span>High Risk</span><strong id="detail-high-risk">0</strong></article>
+          </div>
+
+          <dl class="timestamps">
+            <div><dt>First Seen</dt><dd id="detail-first">-</dd></div>
+            <div><dt>Last Seen</dt><dd id="detail-last">-</dd></div>
+          </dl>
+
+          <h3>Services</h3>
+          <div id="detail-services" class="chips"></div>
+
+          <h3>Detection Reasons</h3>
+          <div id="detail-tags" class="chips"></div>
+
+          <h3>MITRE ATT&CK</h3>
+          <div id="detail-mitre" class="chips"></div>
+
+          <h3>Timeline</h3>
+          <ol id="detail-timeline" class="timeline"></ol>
+        </div>
+      </aside>
+    </section>
+
+    <div class="section-label" id="governance">
+      <span>Incident Governance</span>
+      <p>Track incident status and monitor admin actions.</p>
+    </div>
+
+    <section class="incident-panel">
+      <div class="section-head">
+        <h2>Incidents</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Source</th><th>Severity</th><th>Status</th><th>MITRE</th><th>Title</th><th>Action</th></tr></thead>
+          <tbody id="incidents"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="audit-panel">
+      <div class="section-head">
+        <h2>Admin Audit</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>Source</th><th>Action</th><th>Status</th><th>Detail</th></tr></thead>
+          <tbody id="admin-audit"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

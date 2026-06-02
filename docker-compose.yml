@@ -1,0 +1,32 @@
+services:
+  phantom-net:
+    build: .
+    image: phantom-net:local
+    restart: unless-stopped
+    init: true
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+      # Enable TCP decoy ports only when server.no_tcp_decoys is false.
+      # - "2222:2222"
+      # - "3306:3306"
+      # - "5432:5432"
+    environment:
+      PHANTOM_HOST: 0.0.0.0
+      PHANTOM_PROFILE: ${PHANTOM_PROFILE:-dev}
+      PHANTOM_ADMIN_USER: ${PHANTOM_ADMIN_USER:-admin}
+      PHANTOM_ADMIN_PASSWORD: ${PHANTOM_ADMIN_PASSWORD:-phantom-admin}
+      PHANTOM_ADMIN_PASSWORD_HASH: ${PHANTOM_ADMIN_PASSWORD_HASH:-}
+      PHANTOM_AUTH_SECRET: ${PHANTOM_AUTH_SECRET:-change-this-local-secret}
+      PHANTOM_BACKEND_URL: ${PHANTOM_BACKEND_URL:-}
+      PHANTOM_SIEM_ENABLED: ${PHANTOM_SIEM_ENABLED:-true}
+    volumes:
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml:ro
+    healthcheck:
+      test: ["CMD", "python3", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8080/healthz', timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
